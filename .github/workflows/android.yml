@@ -1,8 +1,8 @@
-name: Build & Release Citra 32-bit APK
+name: Build Debug APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Checkout repo
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
 
     - name: ☕ Set up Java 17
@@ -22,29 +22,15 @@ jobs:
     - name: 🧰 Set up Android SDK
       uses: android-actions/setup-android@v2
 
-    - name: 🔐 Decode and save keystore
-      run: |
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.jks
-
-    - name: 📝 Write signing config
-      run: |
-        echo "storeFile=../release-key.jks" > src/android/key.properties
-        echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> src/android/key.properties
-        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> src/android/key.properties
-        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> src/android/key.properties
-
     - name: ✅ Make gradlew executable
       run: chmod +x ./src/android/gradlew
 
-    - name: 🏗️ Build Release APK
+    - name: 🏗️ Build Debug APK
       working-directory: ./src/android
-      run: ./gradlew assembleRelease
+      run: ./gradlew assembleDebug
 
-    - name: 📤 Upload to GitHub Releases
-      uses: softprops/action-gh-release@v2
+    - name: 📤 Upload APK
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: latest
-        name: Latest 32-bit Citra APK
-        files: ./src/android/app/build/outputs/apk/release/*.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: citra-debug-apk
+        path: src/android/app/build/outputs/apk/debug/*.apk
