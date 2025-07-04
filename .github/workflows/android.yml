@@ -13,7 +13,7 @@ jobs:
     - name: 📥 Checkout repo
       uses: actions/checkout@v4
 
-    - name: ☕ Set up JDK
+    - name: ☕ Set up Java 17
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
@@ -22,11 +22,11 @@ jobs:
     - name: 🧰 Set up Android SDK
       uses: android-actions/setup-android@v2
 
-    - name: 📦 Decode Keystore
+    - name: 🔐 Decode and save keystore
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.jks
 
-    - name: 🛠️ Configure signing properties
+    - name: 📝 Write signing config
       run: |
         echo "storeFile=../release-key.jks" > src/android/key.properties
         echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> src/android/key.properties
@@ -36,11 +36,11 @@ jobs:
     - name: ✅ Make gradlew executable
       run: chmod +x ./src/android/gradlew
 
-    - name: 🏗️ Build release APK
+    - name: 🏗️ Build Release APK
       working-directory: ./src/android
       run: ./gradlew assembleRelease
 
-    - name: 📤 Upload release to GitHub
+    - name: 📤 Upload to GitHub Releases
       uses: softprops/action-gh-release@v2
       with:
         tag_name: latest
