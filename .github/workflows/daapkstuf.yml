@@ -1,0 +1,50 @@
+name: Build & Release Citra 32-bit APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout repo
+      uses: actions/checkout@v4
+
+    - name: ☕ Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 11
+
+    - name: 🧰 Set up Android SDK
+      uses: android-actions/setup-android@v2
+
+    - name: 📦 Decode Keystore
+      run: |
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.jks
+
+    - name: 🛠️ Configure signing properties
+      run: |
+        echo "storeFile=../release-key.jks" > src/android/key.properties
+        echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> src/android/key.properties
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> src/android/key.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> src/android/key.properties
+
+    - name: ✅ Make gradlew executable
+      run: chmod +x ./src/android/gradlew
+
+    - name: 🏗️ Build release APK
+      working-directory: ./src/android
+      run: ./gradlew assembleRelease
+
+    - name: 📤 Upload release to GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest
+        name: Latest 32-bit Citra APK
+        files: ./src/android/app/build/outputs/apk/release/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
