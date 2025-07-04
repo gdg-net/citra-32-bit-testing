@@ -42,3 +42,6 @@ We happily accept monetary donations or donated games and hardware. Please see o
 * Infrastructure setup
 
 We also more than gladly accept used 3DS consoles! If you would like to give yours away, don't hesitate to join our [Discord server](https://citra-emu.org/discord/) and talk to bunnei.
+
+### 32 bit support?
+I, gdg-net, am attempting to make a 32 bit build of citra for amazon fire devices. If you would like to help, make a pull request please!
