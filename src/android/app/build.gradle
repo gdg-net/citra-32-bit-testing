@@ -8,13 +8,26 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-
     defaultConfig {
         applicationId "org.citra.emu"
         minSdkVersion 24
         targetSdkVersion 31
-        versionCode(getBuildVersionCode())
+        versionCode getBuildVersionCode()
         versionName "${getVersion()}"
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DENABLE_QT=0", // Don't use QT
+                        "-DENABLE_SDL2=0", // Don't use SDL
+                        "-DENABLE_WEB_SERVICE=0", // Don't use web services
+                        "-DANDROID_ARM_NEON=true", // cryptopp requires Neon
+                        "-DENABLE_CUBEB=1",
+                        "-DANDROID_STL=c++_static",
+                        "-DCMAKE_BUILD_TYPE=Release",
+                        "-DCMAKE_CXX_FLAGS_RELEASE=-Ofast"
+                abiFilters "armeabi-v7a"  // ✅ Force 32-bit build
+            }
+        }
     }
 
     signingConfigs {
@@ -26,22 +39,16 @@ android {
         }
     }
 
-    // Define build types, which are orthogonal to product flavors.
     buildTypes {
-        // Signed by release key, allowing for upload to Play Store.
         release {
             signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
-        // Signed by debug key disallowing distribution on Play Store.
-        // Attaches 'debug' suffix to version and package name, allowing installation alongside the release build.
         debug {
-            // TODO If this is ever modified, change application_id in debug/strings.xml
             applicationIdSuffix ".debug"
-            versionNameSuffix '-debug'
+            versionNameSuffix "-debug"
             jniDebuggable true
         }
     }
@@ -53,27 +60,13 @@ android {
         }
     }
 
-    ndkVersion = '27.2.12479018'
+    ndkVersion '27.2.12479018'
+
     lint {
         abortOnError false
     }
-    namespace 'org.citra.emu'
 
-    defaultConfig {
-        externalNativeBuild {
-            cmake {
-                arguments "-DENABLE_QT=0", // Don't use QT
-                        "-DENABLE_SDL2=0", // Don't use SDL
-                        "-DENABLE_WEB_SERVICE=0", // Don't use web services
-                        "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
-                        "-DENABLE_CUBEB=1",
-                        "-DANDROID_STL=c++_static",
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DCMAKE_CXX_FLAGS_RELEASE=-Ofast"
-                abiFilters "arm64-v8a"
-            }
-        }
-    }
+    namespace 'org.citra.emu'
 }
 
 dependencies {
@@ -89,27 +82,23 @@ dependencies {
 
 def getVersion() {
     def versionNumber = '0.0'
-
     try {
         versionNumber = 'git describe --always --long'.execute([], project.rootDir).text
-                .trim()
-                .replaceAll(/(-0)?-[^-]+$/, "")
+            .trim()
+            .replaceAll(/(-0)?-[^-]+$/, "")
     } catch (Exception e) {
         logger.error('Cannot find git, defaulting to dummy version number')
     }
-
     return versionNumber
 }
-
 
 def getBuildVersionCode() {
     try {
         def versionNumber = 'git rev-list --first-parent --count HEAD'.execute([], project.rootDir).text
-                .trim()
+            .trim()
         return Integer.valueOf(versionNumber)
     } catch (Exception e) {
         logger.error('Cannot find git, defaulting to dummy version number')
     }
-
     return 0
 }
