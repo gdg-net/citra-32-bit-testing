@@ -12,21 +12,20 @@ android {
         applicationId "org.citra.emu"
         minSdkVersion 24
         targetSdkVersion 31
-        versionCode(getBuildVersionCode())
-        versionName "${getVersion()}"
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
         release {
-            // No signing config here — GitHub will use unsigned debug keystore
+            // Disabled signing block to prevent GitHub Action failure
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-
         debug {
             applicationIdSuffix ".debug"
-            versionNameSuffix '-debug'
+            versionNameSuffix "-debug"
             jniDebuggable true
         }
     }
@@ -38,7 +37,7 @@ android {
         }
     }
 
-    ndkVersion = '27.2.12479018'
+    ndkVersion '27.2.12479018'
 
     lint {
         abortOnError false
@@ -50,14 +49,14 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DENABLE_QT=0",
-                        "-DENABLE_SDL2=0",
-                        "-DENABLE_WEB_SERVICE=0",
-                        "-DANDROID_ARM_NEON=true",
-                        "-DENABLE_CUBEB=1",
-                        "-DANDROID_STL=c++_static",
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DCMAKE_CXX_FLAGS_RELEASE=-Ofast"
-                abiFilters "arm64-v8a"
+                          "-DENABLE_SDL2=0",
+                          "-DENABLE_WEB_SERVICE=0",
+                          "-DANDROID_ARM_NEON=true",
+                          "-DENABLE_CUBEB=1",
+                          "-DANDROID_STL=c++_static",
+                          "-DCMAKE_BUILD_TYPE=Release",
+                          "-DCMAKE_CXX_FLAGS_RELEASE=-Ofast"
+                abiFilters "armeabi-v7a"  // ✅ for 32-bit support
             }
         }
     }
@@ -72,27 +71,7 @@ dependencies {
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
-}
 
-def getVersion() {
-    def versionNumber = '0.0'
-    try {
-        versionNumber = 'git describe --always --long'.execute([], project.rootDir).text
-                .trim()
-                .replaceAll(/(-0)?-[^-]+$/, "")
-    } catch (Exception e) {
-        logger.error('Cannot find git, defaulting to dummy version number')
-    }
-    return versionNumber
-}
-
-def getBuildVersionCode() {
-    try {
-        def versionNumber = 'git rev-list --first-parent --count HEAD'.execute([], project.rootDir).text
-                .trim()
-        return Integer.valueOf(versionNumber)
-    } catch (Exception e) {
-        logger.error('Cannot find git, defaulting to dummy version number')
-    }
-    return 0
+    // ✅ Fix for @Nullable, @Nonnull, etc.
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 }
